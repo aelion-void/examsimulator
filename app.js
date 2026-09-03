@@ -33,64 +33,50 @@ document.addEventListener("DOMContentLoaded", () => {
 // Display all papers
 // ====================================
 
-function loadPaperList() {
+let currentPaperFilter = 'all';
+
+function loadPaperList(filter) {
+    if (filter !== undefined) currentPaperFilter = filter;
 
     const container = document.getElementById("paperList");
-
     container.innerHTML = "";
 
-    const papers = getPapers();
+    let papers = getPapers();
+
+    // Apply filter
+    if (currentPaperFilter !== 'all') {
+        papers = papers.filter(p =>
+            p.title && p.title.toLowerCase().includes(currentPaperFilter.toLowerCase())
+        );
+    }
 
     if (papers.length === 0) {
-
-        container.innerHTML = "<p>No papers imported.</p>";
-
+        container.innerHTML = `<p>No ${currentPaperFilter === 'all' ? '' : currentPaperFilter + ' '}papers found.</p>`;
         return;
-
     }
 
     papers.forEach(paper => {
-
         const div = document.createElement("div");
-
         div.className = "paper-item";
-
         div.innerHTML = `
-
             <div>
-
                 <h3>${paper.title}</h3>
-
                 <p>${paper.totalQuestions} Questions</p>
-
                 <small>${paper.created}</small>
-
             </div>
-
             <div class="paper-buttons">
-
-                <button onclick="startExam(${paper.id})">
-
-                    Start
-
-                </button>
-
-                <button
-                    class="delete-btn"
-                    onclick="removePaper(${paper.id})">
-
-                    Delete
-
-                </button>
-
+                <button onclick="startExam(${paper.id})">Start</button>
+                <button class="delete-btn" onclick="removePaper(${paper.id})">Delete</button>
             </div>
-
         `;
-
         container.appendChild(div);
-
     });
+}
 
+function filterPapers(filter, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadPaperList(filter);
 }
 
 // ====================================

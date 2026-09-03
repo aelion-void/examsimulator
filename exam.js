@@ -6,51 +6,60 @@ let paper = null;
 let currentQuestion = 0;
 
 let totalTime = 60 * 60;
-let sectionTime = 15 * 60;
 
 let totalTimer;
-let sectionTimer;
 
 // -----------------------------
 
 window.onload = function () {
 
     const id = getCurrentPaper();
-
     paper = getPaper(id);
 
     if (!paper) {
-
         alert("Paper not found.");
-
         window.location.href = "index.html";
-
         return;
-
     }
 
-    document.getElementById("paperTitle").innerText =
-        paper.title;
+    document.getElementById("paperTitle").innerText = paper.title;
+    document.getElementById("totalQuestions").innerText = paper.totalQuestions;
 
-    document.getElementById("totalQuestions").innerText =
-        paper.totalQuestions;
-
-    if (!paper.answers)
-        paper.answers = [];
-
-    if (!paper.review)
-        paper.review = [];
-
-    if (!paper.currentQuestion)
-        paper.currentQuestion = 0;
+    if (!paper.answers) paper.answers = [];
+    if (!paper.review) paper.review = [];
+    if (!paper.currentQuestion) paper.currentQuestion = 0;
 
     currentQuestion = paper.currentQuestion;
 
     createPalette();
-
     loadQuestion();
 
-    startTimers();
+    // Event Listeners for Header controls
+    document.getElementById("startExamBtn").onclick = function() {
+        document.getElementById("startModal").classList.add("hidden");
+        
+        // Clear previous answers on start to ensure a fresh session
+        paper.answers = [];
+        paper.review = [];
+        paper.currentQuestion = 0;
+        currentQuestion = 0;
+        updatePaper(paper);
+        updatePalette();
+        loadQuestion();
+        
+        startTimers();
+    };
+
+    document.getElementById("exitBtn").onclick = function() {
+        if (confirm("Are you sure you want to exit? Your progress is saved.")) {
+            clearInterval(totalTimer);
+            window.location.href = "index.html";
+        }
+    };
+
+    document.getElementById("togglePaletteBtn").onclick = function() {
+        document.querySelector(".exam-layout").classList.toggle("palette-closed");
+    };
 
 }
 
@@ -81,29 +90,32 @@ function loadQuestion() {
 
         div.className = "option";
 
-        const letter =
-            String.fromCharCode(65 + index);
+        const letter = String.fromCharCode(65 + index);
+        const isChecked = paper.answers[currentQuestion] === letter;
+
+        if (isChecked) {
+            div.classList.add("selected");
+        }
 
         div.innerHTML = `
             <input
                 type="radio"
                 name="answer"
                 value="${letter}"
-                ${paper.answers[currentQuestion] === letter ? "checked" : ""}
+                ${isChecked ? "checked" : ""}
             >
             ${option}
         `;
 
         div.querySelector("input")
             .addEventListener("change", function () {
-
-                paper.answers[currentQuestion] =
-                    this.value;
-
+                paper.answers[currentQuestion] = this.value;
                 updatePaper(paper);
-
                 updatePalette();
 
+                // Update styling
+                document.querySelectorAll(".option").forEach(opt => opt.classList.remove("selected"));
+                div.classList.add("selected");
             });
 
         options.appendChild(div);
@@ -228,59 +240,29 @@ document
 
 // -----------------------------
 
-document
-.getElementById("submitExamBtn")
-.onclick = function () {
-
+document.getElementById("submitExamBtn").onclick = function () {
     if (!confirm("Submit Exam?"))
         return;
-
+    
+    clearInterval(totalTimer);
     updatePaper(paper);
-
     window.location.href = "results.html";
-
 };
 
 // -----------------------------
 
 function startTimers() {
+    totalTimer = setInterval(function () {
+        totalTime--;
+        displayTotal();
 
-    totalTimer =
-        setInterval(function () {
-
-            totalTime--;
-
-            displayTotal();
-
-            if (totalTime <= 0) {
-
-                clearInterval(totalTimer);
-
-                clearInterval(sectionTimer);
-
-                alert("Time Over");
-
-                location.reload();
-
-            }
-
-        }, 1000);
-
-    sectionTimer =
-        setInterval(function () {
-
-            sectionTime--;
-
-            displaySection();
-
-            if (sectionTime <= 0) {
-
-                sectionTime = 15 * 60;
-
-            }
-
-        }, 1000);
-
+        if (totalTime <= 0) {
+            clearInterval(totalTimer);
+            alert("Time Over");
+            updatePaper(paper);
+            window.location.href = "results.html";
+        }
+    }, 1000);
 }
 
 // -----------------------------
@@ -304,29 +286,13 @@ function displayTotal() {
 
 // -----------------------------
 
-function displaySection() {
-
-    const m =
-        Math.floor(sectionTime / 60);
-
-    const s =
-        sectionTime % 60;
-
-    document
-        .getElementById("sectionTimer")
-        .innerText =
-        String(m).padStart(2, "0") +
-        ":" +
-        String(s).padStart(2, "0");
-
-}
+// Section timer logic removed
 
 // ====================================
 // New Attempt - Clear all answers
 // ====================================
 
 function newAttempt() {
-    
     if (!confirm("Clear all answers and start fresh?")) {
         return;
     }
@@ -340,14 +306,11 @@ function newAttempt() {
     
     // Reset timers
     clearInterval(totalTimer);
-    clearInterval(sectionTimer);
-    
     totalTime = 60 * 60;
-    sectionTime = 15 * 60;
     
     // Reload
     loadQuestion();
-    startTimers();
+    document.getElementById("startModal").classList.remove("hidden");
     
     alert("Answers cleared. Starting fresh!");
 }

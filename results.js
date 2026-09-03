@@ -54,8 +54,53 @@ function displayResults() {
     document.getElementById("skippedCount").innerText = skipped;
     document.getElementById("accuracy").innerText = accuracy + "%";
 
+    // Auto-save attempt to localStorage for analytics
+    autoSaveAttempt(total, total - skipped, correct, wrong, accuracy);
+
     // Display all questions
     displayQuestions();
+}
+
+// ====================================
+// Auto-save attempt to localStorage
+// ====================================
+function autoSaveAttempt(total, attempted, correct, incorrect, accuracy) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const paperName = paper.title || 'Unknown';
+
+        const newRow = {
+            'Date': today,
+            'PaperName': paperName,
+            'Total': String(total),
+            'Attempted': String(attempted),
+            'Correct': String(correct),
+            'Incorrect': String(incorrect),
+            'Accuracy': accuracy + '%',
+            'Time Taken': '60:00',
+            _accuracy: accuracy,
+            _attempted: attempted,
+            _correct: correct,
+            _incorrect: incorrect,
+            _total: total
+        };
+
+        let existing = [];
+        try {
+            const raw = localStorage.getItem('examAttempts');
+            if (raw) existing = JSON.parse(raw);
+        } catch(e) {}
+
+        // Overwrite by Date+PaperName
+        const key = today + '|' + paperName;
+        existing = existing.filter(r => (r['Date'] + '|' + r['PaperName']) !== key);
+        existing.push(newRow);
+        existing.sort((a, b) => (a['Date'] || '').localeCompare(b['Date'] || ''));
+
+        localStorage.setItem('examAttempts', JSON.stringify(existing));
+    } catch(e) {
+        console.warn('Failed to auto-save attempt:', e);
+    }
 }
 
 // ====================================

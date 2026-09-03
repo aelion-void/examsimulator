@@ -3,49 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Exam Practice </title>
-
+    <title>Exam Simulator</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ---- Home page two-column layout ---- */
+        .home-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            width: 95%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        /* ---- Sidebar (analytics panel) ---- */
+        .analytics-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+
+        .sidebar-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        /* Calendar */
+        #calendarContainer { width: 100%; }
+
+        .cal-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .cal-nav-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .cal-nav-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .cal-nav-btn:hover { background: #f1f5f9; color: #1e293b; }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        .cal-header-row { margin-bottom: 2px; }
+        .cal-day-header {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .cal-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            border-radius: 4px;
+            background: #f1f5f9;
+            cursor: default;
+            transition: transform 0.15s;
+            position: relative;
+        }
+        .cal-cell.cal-blank { background: transparent; }
+        .cal-cell.cal-practiced {
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .cal-cell.cal-practiced:hover { transform: scale(1.15); z-index: 2; }
+        .cal-cell.cal-today {
+            box-shadow: inset 0 0 0 2px #3b82f6;
+        }
+
+        /* Legend */
+        .cal-legend {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #64748b;
+        }
+        .cal-legend span {
+            display: inline-block;
+            width: 10px; height: 10px;
+            border-radius: 2px;
+        }
+
+        /* Stats grid */
+        .stats-mini-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .mini-stat {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .mini-stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        .mini-stat-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Today block */
+        .today-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        .today-row:last-child { border-bottom: none; }
+        .today-row span:last-child { font-weight: 700; }
+
+        /* Weekly chart */
+        #weeklyChart {
+            width: 100%;
+            height: 90px;
+            display: block;
+        }
+
+        /* Log form */
+        .log-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .log-form input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1e293b;
+            background: #f8fafc;
+        }
+        .log-form input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+        }
+        .log-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .log-form button[type=submit] {
+            padding: 8px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .log-form button[type=submit]:hover { background: #2563eb; }
+        .export-btn {
+            width: 100%;
+            padding: 8px;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .export-btn:hover { background: #e2e8f0; }
+        .csv-load-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        #csvFileInput { margin-bottom: 0; font-size: 12px; }
+
+        #logSuccessMsg {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 600;
+            text-align: center;
+            padding: 4px;
+        }
+
+        /* ---- Main content area ---- */
+        .main-content { display: flex; flex-direction: column; gap: 20px; }
+
+        .home-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        .home-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+            text-align: left;
+        }
+        .home-header .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        /* Paper filters */
+        .paper-filters {
+            display: flex;
+            gap: 6px;
+        }
+        .filter-btn {
+            padding: 5px 14px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover { background: #e2e8f0; }
+        .filter-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        @media (max-width: 800px) {
+            .home-layout { grid-template-columns: 1fr; }
+            .analytics-sidebar { order: -1; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
+<div class="home-layout">
 
-    <h1> Exam Simulator </h1>
-
-    <div class="card">
-
-        <h2>Import Question Paper</h2>
-
-        <input
-            type="file"
-            id="paperFile"
-            accept=".txt"
-        >
-
-        <button id="importBtn">
-            Import Paper
-        </button>
-
-    </div>
-
-    <div class="card">
-
-        <h2>Imported Papers</h2>
-
-        <div id="paperList">
-
-            <p>No papers imported.</p>
-
+    <!-- ======= MAIN CONTENT ======= -->
+    <div class="main-content">
+        <div class="home-header">
+            <div>
+                <h1>Exam Simulator</h1>
+                <p class="subtitle">Import and practice PIB question papers</p>
+            </div>
         </div>
 
+        <!-- Import Card -->
+        <div class="card">
+            <h2>Import Question Paper</h2>
+            <input type="file" id="paperFile" accept=".txt">
+            <button id="importBtn">Import Paper</button>
+        </div>
+
+        <!-- Paper List Card -->
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="margin:0;">Imported Papers</h2>
+                <div class="paper-filters">
+                    <button class="filter-btn active" onclick="filterPapers('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterPapers('PIB', this)">PIB</button>
+                    <button class="filter-btn" onclick="filterPapers('Selection', this)">SSC</button>
+                </div>
+            </div>
+            <div id="paperList">
+                <p>No papers imported.</p>
+            </div>
+        </div>
     </div>
+
+    <!-- ======= ANALYTICS SIDEBAR ======= -->
+    <aside class="analytics-sidebar">
+
+        <!-- CSV Load -->
+        <div class="sidebar-card">
+            <h3>📂 Load Analytics</h3>
+            <label class="csv-load-label">Upload exam_attempts_log.csv</label>
+            <input type="file" id="csvFileInput" accept=".csv">
+        </div>
+
+        <!-- Activity Calendar -->
+        <div class="sidebar-card">
+            <h3>📅 Activity Calendar</h3>
+            <div id="calendarContainer"></div>
+            <div class="cal-legend">
+                Less
+                <span style="background:#f1f5f9;"></span>
+                <span style="background:#a7f3d0;"></span>
+                <span style="background:#6ee7b7;"></span>
+                <span style="background:#34d399;"></span>
+                <span style="background:#10b981;"></span>
+                <span style="background:#065f46;"></span>
+                More
+            </div>
+        </div>
+
+        <!-- All-Time Stats -->
+        <div class="sidebar-card">
+            <h3>📊 All-Time Stats</h3>
+            <div class="stats-mini-grid">
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="stat-days">—</div>
+                    <div class="mini-stat-label">Days</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="stat-streak">—</div>
+                    <div class="mini-stat-label">Best Streak</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="stat-avg-acc">—</div>
+                    <div class="mini-stat-label">Avg Accuracy</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-val" id="stat-best-acc">—</div>
+                    <div class="mini-stat-label">Best Accuracy</div>
+                </div>
+            </div>
+            <div class="mini-stat" style="margin-top:8px;">
+                <div class="mini-stat-val" id="stat-attempted">—</div>
+                <div class="mini-stat-label">Total Questions Attempted</div>
+            </div>
+        </div>
+
+        <!-- Today's Stats -->
+        <div class="sidebar-card" id="today-block" hidden>
+            <h3>🗓️ Today</h3>
+            <div class="today-row"><span>Attempted</span><span id="today-attempted">—</span></div>
+            <div class="today-row"><span>Correct</span><span id="today-correct">—</span></div>
+            <div class="today-row"><span>Incorrect</span><span id="today-incorrect">—</span></div>
+            <div class="today-row"><span>Accuracy</span><span id="today-accuracy">—</span></div>
+            <div class="today-row"><span>Time</span><span id="today-time">—</span></div>
+        </div>
+
+        <!-- Weekly Chart -->
+        <div class="sidebar-card">
+            <h3>📈 Weekly Accuracy</h3>
+            <canvas id="weeklyChart" width="240" height="90"></canvas>
+        </div>
+
+        <!-- Quick Log -->
+        <div class="sidebar-card">
+            <h3>➕ Log Attempt</h3>
+            <form class="log-form" id="logForm">
+                <input type="date" name="date" required placeholder="Date">
+                <input type="text" name="paper" required placeholder="Paper name (e.g. PIB_CLAUDE_20260903)">
+                <div class="log-form-row">
+                    <input type="number" name="total" required placeholder="Total Qs" min="1">
+                    <input type="number" name="attempted" required placeholder="Attempted" min="0">
+                </div>
+                <div class="log-form-row">
+                    <input type="number" name="correct" required placeholder="Correct" min="0">
+                    <input type="text" name="time" placeholder="Time (MM:SS)">
+                </div>
+                <button type="submit">Log Entry</button>
+                <p id="logSuccessMsg" hidden>✓ Entry logged!</p>
+            </form>
+            <button class="export-btn" id="exportCsvBtn">⬇ Export CSV</button>
+        </div>
+
+    </aside>
 
 </div>
 
 <script src="parser.js"></script>
 <script src="storage.js"></script>
 <script src="app.js"></script>
+<script src="analytics.js"></script>
 
 </body>
 </html>
