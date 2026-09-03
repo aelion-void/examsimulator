@@ -92,13 +92,14 @@ function displayQuestions() {
         // Create result card
         const card = document.createElement("div");
         card.className = `question-result ${status}`;
+        card.onclick = () => card.classList.toggle("expanded");
 
         const header = document.createElement("div");
         header.className = "question-header";
 
         const numCircle = document.createElement("div");
         numCircle.className = "question-number";
-        numCircle.innerText = index + 1;
+        numCircle.innerText = "Q" + (index + 1);
 
         const text = document.createElement("div");
         text.className = "question-text";
@@ -107,40 +108,32 @@ function displayQuestions() {
         const badge = document.createElement("div");
         badge.className = `status-badge ${status}`;
         badge.innerText = 
-            status === 'correct' ? '✓ Correct' :
-            status === 'wrong' ? '✗ Wrong' :
-            '- Skipped';
+            status === 'correct' ? 'CORRECT' :
+            status === 'wrong' ? 'WRONG' :
+            'SKIPPED';
 
         header.appendChild(numCircle);
         header.appendChild(text);
         header.appendChild(badge);
+        card.appendChild(header);
 
-        const answerSection = document.createElement("div");
-        answerSection.className = "answer-section";
-
-        // User answer
-        const userAnswerRow = document.createElement("div");
-        userAnswerRow.className = "answer-row";
-        const userLabel = document.createElement("div");
-        userLabel.className = "answer-label";
-        userLabel.innerText = "Your answer:";
-        const userValue = document.createElement("div");
-        userValue.className = `answer-value ${status !== 'skipped' ? status : ''}`;
-        
+        // Compact user answer
+        const yourAnswerText = document.createElement("div");
+        yourAnswerText.className = `your-answer-text ${status}`;
         if (userAnswer) {
             const optionIndex = userAnswer.charCodeAt(0) - 65;
             if (q.options[optionIndex]) {
-                userValue.innerText = `(${userAnswer}) ${q.options[optionIndex]}`;
+                yourAnswerText.innerText = `Your answer: (${userAnswer}) ${q.options[optionIndex]}`;
             } else {
-                userValue.innerText = `(${userAnswer})`;
+                yourAnswerText.innerText = `Your answer: (${userAnswer})`;
             }
         } else {
-            userValue.innerText = "Not answered";
+            yourAnswerText.innerText = "Your answer: Not answered";
         }
+        card.appendChild(yourAnswerText);
 
-        userAnswerRow.appendChild(userLabel);
-        userAnswerRow.appendChild(userValue);
-        answerSection.appendChild(userAnswerRow);
+        const answerSection = document.createElement("div");
+        answerSection.className = "answer-section";
 
         // Correct answer
         if (status !== 'correct' && correctAnswer) {
@@ -164,8 +157,11 @@ function displayQuestions() {
             answerSection.appendChild(correctRow);
         }
 
-        card.appendChild(header);
-        card.appendChild(answerSection);
+        // Only append answer section if there's content inside it
+        if (answerSection.hasChildNodes()) {
+            card.appendChild(answerSection);
+        }
+
         container.appendChild(card);
     });
 
