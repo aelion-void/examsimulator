@@ -33,7 +33,7 @@ function displayResults() {
     paper.questions.forEach((q, index) => {
         const userAnswer = paper.answers[index];
         const correctAnswer = q.answer 
-            ? (q.answer.match(/\(?([a-dA-D])\)?\s*$/) || q.answer.match(/([a-dA-D])/)||[null, ""])[1].toUpperCase() 
+            ? q.answer.replace(/[^A-D]/g, "") 
             : null;
 
         if (!userAnswer) {
@@ -115,7 +115,7 @@ function displayQuestions() {
     paper.questions.forEach((q, index) => {
         const userAnswer = paper.answers[index];
         const correctAnswer = q.answer 
-            ? (q.answer.match(/\(?([a-dA-D])\)?\s*$/) || q.answer.match(/([a-dA-D])/)||[null, ""])[1].toUpperCase() 
+            ? q.answer.replace(/[^A-D]/g, "") 
             : null;
 
         let status;

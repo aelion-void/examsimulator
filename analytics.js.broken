@@ -275,6 +275,7 @@ function initAnalytics() {
                 const csvRows = parseCSV(e.target.result);
                 attemptData = mergeData([attemptData, csvRows]);
                 saveToStorage(attemptData);
+        renderAttempts();
                 renderCalendar();
                 renderStats();
             };
@@ -309,6 +310,7 @@ function initAnalytics() {
 
         attemptData = mergeData([attemptData, [newRow]]);
         saveToStorage(attemptData);
+        renderAttempts();
         renderCalendar();
         renderStats();
         this.reset();
@@ -331,10 +333,37 @@ function initAnalytics() {
 document.addEventListener('DOMContentLoaded', initAnalytics);
 
 // ====================================
-// Render Previous Attempts with Accordion
+// Render Previous Attempts (Left Sidebar)
 // ====================================
 let attemptsDisplayData = [];
 let attemptsSortOrder = 'newest';
+
+
+function sortAttempts(order) {
+    attemptsSortOrder = order;
+
+    // Update active button
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    renderAttempts();
+}
+
+
+// Replace the renderAttempts function with this new version
+
+    const date = new Date(dateStr + 'T00:00:00');
+    const day = String(date.getDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+}
+
+
+// Replace the renderAttempts function with accordion version
 
 function renderAttempts() {
     const container = document.getElementById('attemptsContainer');
@@ -376,6 +405,7 @@ function renderAttempts() {
 
     // Render each date group
     dates.forEach((date, index) => {
+        // Create date header
         const dateGroup = document.createElement('div');
         dateGroup.className = 'attempt-date-group';
 
@@ -389,6 +419,7 @@ function renderAttempts() {
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'attempt-toggle-btn';
         
+        // Create attempts container for this date
         const attemptsForDate = document.createElement('div');
         attemptsForDate.className = 'attempt-items-group';
 
@@ -467,6 +498,7 @@ function renderAttempts() {
     });
 }
 
+// Helper function to format date nicely
 function formatDate(dateStr) {
     const date = new Date(dateStr + 'T00:00:00');
     const day = String(date.getDate()).padStart(2, '0');
@@ -476,14 +508,3 @@ function formatDate(dateStr) {
     return `${day} ${month} ${year}`;
 }
 
-function sortAttempts(order) {
-    attemptsSortOrder = order;
-
-    // Update active button
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-
-    renderAttempts();
-}
